@@ -1,5 +1,5 @@
 {
-  "name": "db_assignment1",
+  "name": "db_assignment3",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -23,6 +23,7 @@
     "fastify": "^4.26.2",
     "fastify-plugin": "^4.5.1",
     "mongoose": "^8.2.1",
+    "neo4j-driver": "^5.20.0",
     "nodemon": "^3.0.3"
   },
   "devDependencies": {

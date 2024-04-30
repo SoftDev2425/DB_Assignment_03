@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import { emissionRoutes } from "./routes/emission";
 import cors from "@fastify/cors";
-import mongoose from "mongoose";
+import neo4j from "neo4j-driver";
 
 declare module "fastify" {
   export interface FastifyRequest {}
@@ -15,14 +15,22 @@ export async function buildServer() {
     methods: ["GET", "PUT", "PATCH", "POST", "DELETE"],
   });
 
-  mongoose
-    .connect("mongodb://localhost:27017/db-assignment-2")
-    .then(() => {
-      console.log("Connected to MongoDB");
-    })
-    .catch((err) => {
-      console.log("Error connecting to db", err);
-    });
+  const credentials = {
+    host: "neo4j://localhost:7687",
+    user: "neo4j",
+    password: "<your-secret-password>",
+  };
+
+  const _driver = neo4j.driver(credentials.host, neo4j.auth.basic(credentials.user, credentials.password));
+
+  // mongoose
+  //   .connect("mongodb://localhost:27017/db-assignment-2")
+  //   .then(() => {
+  //     console.log("Connected to MongoDB");
+  //   })
+  //   .catch((err) => {
+  //     console.log("Error connecting to db", err);
+  //   });
 
   fastify.get("/", async function (request, reply) {
     return { msg: "Hello from DB assignment 1" };
