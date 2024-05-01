@@ -1,8 +1,7 @@
 import fs from "fs";
 import { parse } from "csv-parse";
 import * as path from "path";
-import Organisations from "../../models/organisations";
-import Questionnaires from "../../models/questionnaires";
+import { cypher } from "../../utils/dbConnection";
 
 const scraper5 = async () => {
   return new Promise((resolve, reject) => {
@@ -43,20 +42,24 @@ const scraper5 = async () => {
 
         try {
           for (const record of records) {
-            const organisation = await Organisations.findOne({ accountNo: record.organisationNo });
-
-            if (organisation) {
-              await Questionnaires.create({
+            await cypher(
+              `
+              MATCH (organisation:Organisation {accountNo: $accountNo})
+              MERGE (questionnaire:Questionnaire {name: $name, data: $data})
+              MERGE (questionnaire)-[:MADE_BY]->(organisation)
+              `,
+              {
+                accountNo: +record.organisationNo,
                 name: record.name,
-                organisation_id: organisation._id,
-                data: record.data,
-              });
-            }
+                data: JSON.stringify(record.data),
+              }
+            );
           }
 
           console.log("Scraper 5 done!");
           resolve("Scraper 5 done!");
         } catch (error) {
+          console.log(error);
           reject(error);
         }
       });

@@ -17,7 +17,7 @@ export const scrapeAndInsertIntoDatabase = async () => {
     await scraper2();
     await scraper3();
     await scraper4();
-    // await scraper5();
+    await scraper5();
 
     console.log("All scrapers done! Now you start the server by running: \n    'npm run dev'");
   } catch (error) {
