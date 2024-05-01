@@ -8,6 +8,7 @@ import Populations from "../../models/populations";
 import Organisations from "../../models/organisations";
 import EmissionStatusTypes from "../../models/emissionStatusTypes";
 import GHG_Emissions from "../../models/GHG_Emissions";
+import { cypher } from "../../utils/dbConnection";
 
 const scraper3 = async () => {
   return new Promise((resolve, reject) => {
@@ -76,91 +77,40 @@ const scraper3 = async () => {
 
         try {
           for (const record of records) {
-            // create country
-            const newCountry = await Countries.updateOne(
-              { name: record.country.name },
-              { $setOnInsert: { name: record.country.name } },
-              { upsert: true }
-            );
-
-            // Capture the country id
-            const countryId = newCountry.upsertedId
-              ? newCountry.upsertedId._id
-              : (await Countries.findOne({ name: record.country.name }))?._id;
-
-            // create city
-            const newCity = await Cities.updateOne(
-              { name: record.city.name },
+            // create country, city, organisation, emission + their relationships
+            const populationPropertyName = `population${record.city.population.year}`;
+            await cypher(
+              `
+            MERGE (country:Country {name: $countryName})
+            MERGE (city:City {name: $cityName, C40Status: $cityC40})
+            ON MATCH SET city.${populationPropertyName} = $population
+            ON CREATE SET city.${populationPropertyName} = $population
+            MERGE (city)-[:LOCATED_IN]->(country)
+            MERGE (organisation:Organisation {name: $organisationName, accountNo: $accountNo})
+            MERGE (organisation)-[:OPERATES_IN]->(city)
+            MERGE (GHGEmissions:GHG_Emissions {reportingYear: $reportingYear, measurementYear: $measurementYear, boundary: $boundary, methodology: $methodology, methodologyDetails: $methodologyDetails, description: $description, gassesIncluded: $gassesIncluded, totalCityWideEmissionsCO2: $totalCityWideEmissionsCO2, totalScope1CO2: $totalScope1_CO2, totalScope2CO2: $totalScope2_CO2, emissionStatusType: $emissionStatusType})
+            MERGE (organisation)-[:HAS_EMISSION]->(GHGEmissions)
+              `,
               {
-                $setOnInsert: {
-                  name: record.city.name,
-                  C40Status: record.city.C40Status,
-                  country_id: countryId,
-                },
-              },
-              { upsert: true }
-            );
-
-            // capture the city id
-            const cityId = newCity.upsertedId
-              ? newCity.upsertedId._id
-              : (await Cities.findOne({ name: record.city.name }))?._id;
-
-            // create population
-            const newPopulation = await Populations.create({
-              count: record.city.population.count,
-              year: record.city.population.year,
-              city_id: cityId,
-            });
-
-            // create organisation
-            const newOrganisation = await Organisations.updateOne(
-              { accountNo: record.organisation.accountNo },
-              {
-                $setOnInsert: {
-                  name: record.organisation.name,
-                  accountNo: record.organisation.accountNo,
-                  city_id: cityId,
-                  country_id: countryId,
-                },
-              },
-              {
-                upsert: true,
+                countryName: record.country.name,
+                cityName: record.city.name,
+                cityC40: record.city.C40Status,
+                population: record.city.population.count,
+                organisationName: record.organisation.name,
+                accountNo: record.organisation.accountNo,
+                reportingYear: record.GHG_emissions.reportingYear,
+                measurementYear: record.GHG_emissions.measurementYear,
+                boundary: record.GHG_emissions.boundary,
+                methodology: record.GHG_emissions.methodology,
+                methodologyDetails: record.GHG_emissions.methodologyDetails,
+                description: record.GHG_emissions.description,
+                gassesIncluded: record.GHG_emissions.gassesIncluded,
+                totalCityWideEmissionsCO2: record.GHG_emissions.totalCityWideEmissionsCO2,
+                totalScope1_CO2: record.GHG_emissions.totalScope1CO2 || "",
+                totalScope2_CO2: record.GHG_emissions.totalScope2CO2 || "",
+                emissionStatusType: record.emissionStatusTypes.type,
               }
             );
-
-            // capture the organisation id
-            const organisationId = newOrganisation.upsertedId
-              ? newOrganisation.upsertedId._id
-              : (await Organisations.findOne({ accountNo: record.organisation.accountNo }))?._id;
-
-            // create emissionStatusType
-            const newEmissionStatusType = await EmissionStatusTypes.updateOne(
-              { type: record.emissionStatusTypes.type },
-              { $setOnInsert: { type: record.emissionStatusTypes.type } },
-              { upsert: true }
-            );
-
-            // capture the emissionStatusType id
-            const emissionStatusTypeId = newEmissionStatusType.upsertedId
-              ? newEmissionStatusType.upsertedId._id
-              : (await EmissionStatusTypes.findOne({ type: record.emissionStatusTypes.type }))?._id;
-
-            // create new GHG_EmissionStatus
-            await GHG_Emissions.create({
-              reportingYear: record.GHG_emissions.reportingYear,
-              measurementYear: record.GHG_emissions.measurementYear,
-              boundary: record.GHG_emissions.boundary,
-              methodology: record.GHG_emissions.methodology,
-              methodologyDetails: record.GHG_emissions.methodologyDetails,
-              description: record.GHG_emissions.description,
-              gassesIncluded: record.GHG_emissions.gassesIncluded,
-              totalCityWideEmissionsCO2: record.GHG_emissions.totalCityWideEmissionsCO2,
-              totalScope1_CO2: record.GHG_emissions.totalScope1CO2,
-              totalScope2_CO2: record.GHG_emissions.totalScope2CO2,
-              organisation_id: organisationId,
-              emissionStatusType_id: emissionStatusTypeId,
-            });
           }
 
           console.log("Scraper 3 done!");

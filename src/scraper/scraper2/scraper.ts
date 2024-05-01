@@ -8,6 +8,7 @@ import Organisations from "../../models/organisations";
 import Sectors from "../../models/sectors";
 import TargetTypes from "../../models/targetTypes";
 import Targets from "../../models/targets";
+import { cypher } from "../../utils/dbConnection";
 
 const scraper2 = async () => {
   return new Promise((resolve, reject) => {
@@ -72,99 +73,39 @@ const scraper2 = async () => {
 
         try {
           for (const record of records) {
-            // create country
-            const newCountry = await Countries.updateOne(
-              { name: record.country.name },
-              { $set: { name: record.country.name, regionName: record.country.regionName } },
-              { upsert: true }
-            );
-
-            // Capture the country id
-            const countryId = newCountry.upsertedId
-              ? newCountry.upsertedId._id
-              : (await Countries.findOne({ name: record.country.name }))?._id;
-
-            // create city
-            const newCity = await Cities.updateOne(
-              { name: record.city.name },
+            // create country, city, organisation, sector, target + their relationships
+            const populationPropertyName = `population${record.city.population.year}`;
+            await cypher(
+              `
+              MERGE (country:Country {name: $countryName})
+              MERGE (city:City {name: $cityName, C40Status: $cityC40})
+              ON MATCH SET city.${populationPropertyName} = $population
+              ON CREATE SET city.${populationPropertyName} = $population
+              MERGE (city)-[:LOCATED_IN]->(country)
+              MERGE (organisation:Organisation {name: $organisationName, accountNo: $accountNo})
+              MERGE (organisation)-[:OPERATES_IN]->(city)
+              MERGE (sector:Sector {name: $sector})
+              MERGE (target:Target {targetYear: $targetYear, reportingYear: $reportingYear, baselineYear: $baselineYear, baselineEmissionsCO2: $baselineEmissionsCO2, reductionTargetPercentage: $reductionTargetPercentage, comment: $comment, sector: $sector, targetType: $targetType})
+              MERGE (organisation)-[:HAS_TARGET]->(target)
+              `,
               {
-                $setOnInsert: {
-                  name: record.city.name,
-                  C40Status: record.city.C40Status,
-                  country_id: countryId,
-                },
-              },
-              { upsert: true }
-            );
-
-            // Capture the city id
-            const cityId = newCity.upsertedId
-              ? newCity.upsertedId._id
-              : (await Cities.findOne({ name: record.city.name }))?._id;
-
-            const newPopulation = await Populations.create({
-              count: record.city.population.count,
-              year: record.city.population.year,
-              city_id: cityId,
-            });
-
-            // create organisation
-            const newOrganisation = await Organisations.updateOne(
-              { accountNo: record.organisation.accountNo },
-              {
-                $setOnInsert: {
-                  name: record.organisation.name,
-                  accountNo: record.organisation.accountNo,
-                  city_id: cityId,
-                  country_id: countryId,
-                },
-              },
-              {
-                upsert: true,
+                countryName: record.country.name,
+                cityName: record.city.name,
+                cityC40: record.city.C40Status,
+                population: record.city.population.count || "",
+                organisationName: record.organisation.name,
+                accountNo: record.organisation.accountNo,
+                sector: record.target.sector,
+                targetYear: record.target.targetYear || "2016",
+                reportingYear: record.target.reportingYear,
+                baselineYear: record.target.baselineYear || "",
+                baselineEmissionsCO2: record.target.baselineEmissionsCO2 || "",
+                reductionTargetPercentage: record.target.reductionTargetPercentage || "",
+                comment: record.target.comment,
+                targetName: record.target.reportingYear,
+                targetType: record.targetType.type,
               }
             );
-
-            // capture the organisation id
-            const organisationId = newOrganisation.upsertedId
-              ? newOrganisation.upsertedId._id
-              : (await Organisations.findOne({ accountNo: record.organisation.accountNo }))?._id;
-
-            // create sector
-            const newSector = await Sectors.updateOne(
-              { name: record.target.sector },
-              { $setOnInsert: { name: record.target.sector } },
-              { upsert: true }
-            );
-
-            // new target type
-            const newTargetType = await TargetTypes.updateOne(
-              { type: record.targetType.type },
-              { $setOnInsert: { type: record.targetType.type } },
-              { upsert: true }
-            );
-
-            // Capture the sector id
-            const sectorId = newSector.upsertedId
-              ? newSector.upsertedId._id
-              : (await Sectors.findOne({ name: record.target.sector }))?._id;
-
-            // Capture the target type id
-            const targetTypeId = newTargetType.upsertedId
-              ? newTargetType.upsertedId._id
-              : (await TargetTypes.findOne({ type: record.targetType.type }))?._id;
-
-            // create target
-            await Targets.create({
-              reportingYear: record.target.reportingYear,
-              baselineYear: record.target.baselineYear,
-              targetYear: record.target.targetYear,
-              reductionTargetPercentage: record.target.reductionTargetPercentage,
-              baselineEmissionsCO2: record.target.baselineEmissionsCO2,
-              comment: record.target.comment,
-              organisation_id: organisationId,
-              sector_id: sectorId,
-              targetType_id: targetTypeId,
-            });
           }
 
           console.log("Scraper 2 done!");

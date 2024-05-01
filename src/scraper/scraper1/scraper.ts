@@ -6,8 +6,10 @@ import Countries from "../../models/countries";
 import Cities from "../../models/cities";
 import Sectors from "../../models/sectors";
 import Targets from "../../models/targets";
+import { cypher } from "../../utils/dbConnection";
 
 const scraper1 = async () => {
+  console.log("Scraper 1 started...");
   return new Promise((resolve, reject) => {
     const csvFilePath = path.resolve(__dirname, "2016_Cities_Emissions_Reduction_Targets_20240207.csv");
 
@@ -60,80 +62,34 @@ const scraper1 = async () => {
 
         try {
           for (const record of records) {
-            // create country
-            const newCountry = await Countries.updateOne(
-              { name: record.country.name },
-              { $setOnInsert: { name: record.country.name } },
-              { upsert: true }
-            );
-
-            // Capture the country id
-            const countryId = newCountry.upsertedId
-              ? newCountry.upsertedId._id
-              : (await Countries.findOne({ name: record.country.name }))?._id;
-
-            // create city
-            const newCity = await Cities.updateOne(
-              { name: record.city.name },
+            // create country, city, organisation, sector, target + their relationships
+            await cypher(
+              `
+            MERGE (country:Country {name: $countryName})
+            MERGE (city:City {name: $cityName, C40Status: $cityC40})
+            MERGE (city)-[:LOCATED_IN]->(country)
+            MERGE (organisation:Organisation {name: $organisationName, accountNo: $accountNo})
+            MERGE (organisation)-[:OPERATES_IN]->(city)
+            MERGE (sector:Sector {name: $sector})
+            MERGE (target:Target {targetYear: $targetYear, reportingYear: $reportingYear, baselineYear: $baselineYear, baselineEmissionsCO2: $baselineEmissionsCO2, reductionTargetPercentage: $reductionTargetPercentage, comment: $comment, sector: $sector})
+            MERGE (organisation)-[:HAS_TARGET]->(target)
+          `,
               {
-                $setOnInsert: {
-                  name: record.city.name,
-                  C40Status: record.city.C40Status,
-                  country_id: countryId,
-                },
-              },
-              { upsert: true }
-            );
-
-            // Capture the city id
-            const cityId = newCity.upsertedId
-              ? newCity.upsertedId._id
-              : (await Cities.findOne({ name: record.city.name }))?._id;
-
-            // create organisation
-            const newOrganisation = await Organisations.updateOne(
-              { accountNo: record.organisation.accountNo },
-              {
-                $setOnInsert: {
-                  name: record.organisation.name,
-                  accountNo: record.organisation.accountNo,
-                  city_id: cityId,
-                  country_id: countryId,
-                },
-              },
-              {
-                upsert: true,
+                countryName: record.country.name,
+                cityName: record.city.name,
+                cityC40: record.city.C40Status,
+                organisationName: record.organisation.name,
+                accountNo: record.organisation.accountNo,
+                targetYear: record.target.targetYear || "2016",
+                reportingYear: record.target.reportingYear,
+                baselineYear: record.target.baselineYear || "",
+                baselineEmissionsCO2: record.target.baselineEmissionsCO2 || "",
+                reductionTargetPercentage: record.target.reductionTargetPercentage,
+                comment: record.target.comment,
+                sector: record.target.sector,
+                targetName: record.target.reportingYear,
               }
             );
-
-            // capture the organisation id
-            const organisationId = newOrganisation.upsertedId
-              ? newOrganisation.upsertedId._id
-              : (await Organisations.findOne({ accountNo: record.organisation.accountNo }))?._id;
-
-            // create sector
-            const newSector = await Sectors.updateOne(
-              { name: record.target.sector },
-              { $setOnInsert: { name: record.target.sector } },
-              { upsert: true }
-            );
-
-            // Capture the sector id
-            const sectorId = newSector.upsertedId
-              ? newSector.upsertedId._id
-              : (await Sectors.findOne({ name: record.target.sector }))?._id;
-
-            // create target
-            await Targets.create({
-              reportingYear: record.target.reportingYear,
-              baselineYear: record.target.baselineYear,
-              targetYear: record.target.targetYear,
-              reductionTargetPercentage: record.target.reductionTargetPercentage,
-              baselineEmissionsCO2: record.target.baselineEmissionsCO2,
-              comment: record.target.comment,
-              organisation_id: organisationId,
-              sector_id: sectorId,
-            });
           }
 
           console.log("Scraper 1 done!");
