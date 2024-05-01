@@ -19,17 +19,18 @@ Group E:
 - Rasmus Taul
 
 Our plan involved developing a simple server where the developer can access it,
-enabling interaction with the underlying database layer through various procedures
+enabling interaction with the underlying database layer through various Neo4j Cypher calls
 corresponding to our 10 relevant questions to the given datasets ([found here](https://github.com/SoftDev2425/DB_Assignment_02/tree/master/src/scraper/data)). <br>
 
-- [First assignment done using sql](https://github.com/SoftDev2425/DB_Assignment_01)
+- [First assignment done using MSSQL](https://github.com/SoftDev2425/DB_Assignment_01)
+- [Second assignment done using MongoDB](https://github.com/SoftDev2425/DB_Assignment_02)
 
 ## How to run
 
 ### Step 1: Clone the project
 
 ```
-git clone https://github.com/SoftDev2425/DB_Assignment_02.git
+git clone https://github.com/SoftDev2425/DB_Assignment_03.git
 ```
 
 ### Step 2: Install dependencies
@@ -42,36 +43,30 @@ npm install
 
 ### Step 3: Configure DB-connection
 
-Create or run a mongo database instance. The following is a quick example:
+Create or run a Neo4j Graph DB instance. The following is a quick example:
 
-- Launch Docker Desktop
-- Create a `mongo.yaml` file locally with the following content:
+- Launch Neo4j Desktop
+- Create a new project
+- Add a new local dbms - name doesn't matter, but remember the password
+- Start the database
+- Clicking on it in the menu will show the port, called `Bolt port`. Copy the port.
+- Open the file `src/utils/dbConnection.ts` and change the configurations. Example:
 
-```
-version: "3.1"
-services:
-  mongo:
-    image: mongo
-    restart: always
-    ports:
-      - 27017:27017
-    volumes:
-      - ./docker-data/mongo:/data/db
-volumes:
-  docker-data:
-    external: true
+```typescript
+const credentials = {
+  host: "neo4j://localhost:<ADD THE BOLT PORT HERE>",
+  user: "neo4j",
+  password: "<ADD YOUR PASSWORD HERE>",
+};
 ```
 
-- Open a terminal in the directory you created the file and run `docker-compose up -d mongo.yaml`
-
-Great! Now you should have a mongo instance running. <br> <br>
-NOTE: By default our mongo connection is done on port `27017`. If you run on any other ports then remember to change the connection string in `src/server.ts` and `src/scraper/index.ts`.
+Great! Now you should be ready to scrape the data. <br> <br>
 
 ### Step 4: Run data scraper
 
 To add data data to the database, open a new terminal and run
 
-```
+```shell
 npm run scrape
 ```
 
@@ -83,7 +78,7 @@ Now you should be ready to explore the data via our API.
 
 To start the server run the following command:
 
-```
+```shell
 npm run dev
 ```
 
