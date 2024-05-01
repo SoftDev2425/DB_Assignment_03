@@ -20,8 +20,10 @@ export const scrapeAndInsertIntoDatabase = async () => {
     await scraper5();
 
     console.log("All scrapers done! Now you start the server by running: \n    'npm run dev'");
+    process.exit();
   } catch (error) {
     console.error("Error occurred while running scrapers:", error);
+    process.exit(1);
   }
 };
 
