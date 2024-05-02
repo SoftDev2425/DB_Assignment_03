@@ -63,26 +63,26 @@ export async function emissionRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // // 5
-  // fastify.get("/ranked/:sortBy?", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
-  //   try {
-  //     if (!request.params.sortBy) {
-  //       const data = await getCitiesWithEmissionsRanking("DESC");
-  //       return data;
-  //     }
+  // 5
+  fastify.get("/ranked/:sortBy?", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
+    try {
+      if (!request.params.sortBy) {
+        const data = await getCitiesWithEmissionsRanking("DESC");
+        return data;
+      }
 
-  //     const sortBy = request.params.sortBy.toUpperCase();
-  //     if (sortBy !== "ASC" && sortBy !== "DESC") {
-  //       throw new Error("Invalid sorting type. Please use 'ASC' or 'DESC'");
-  //     }
-
-  //     const data = await getCitiesWithEmissionsRanking(sortBy);
-  //     return data;
-  //   } catch (error: any) {
-  //     fastify.log.error(error);
-  //     reply.code(500).send({ error: error.message });
-  //   }
-  // });
+      const sortBy = request.params.sortBy.toUpperCase();
+      if (sortBy !== "ASC" && sortBy !== "DESC") {
+        throw new Error("Invalid sorting type. Please use 'ASC' or 'DESC'");
+      }
+      
+      const data = await getCitiesWithEmissionsRanking(sortBy);
+      return data;
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.code(500).send({ error: error.message });
+    }
+  });
 
   // // 6
   // fastify.get("/cities", async function (request: FastifyRequest, reply: FastifyReply) {
