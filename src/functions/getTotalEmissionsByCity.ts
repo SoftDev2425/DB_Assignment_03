@@ -33,14 +33,7 @@ export const getTotalEmissionsByCity = async (name: string) => {
     // });
 
     // return {
-    //   city: {
-    //     id: city._id,
-    //     name: city.name,
-    //     populations,
-    //     C40Status: city.C40Status,
-    //   },
     //   totalEmission: {
-    //     calculated_on_ids: emissions.map((emission) => emission._id),
     //     reportingYears: [...new Set(emissions.map((emission) => emission.reportingYear))],
     //     total: {
     //       total: emissions.reduce((acc, curr) => acc + curr.totalCityWideEmissionsCO2, 0),
@@ -79,7 +72,24 @@ export const getTotalEmissionsByCity = async (name: string) => {
     return {
       city: result[0].get("c").properties,
       organisation: uniqueOrganisationsArray,
-      emission: result.map((r) => r.get("e").properties),
+      totalEmission: {
+        reportingYears: [...new Set(result.map((r) => r.get("e").properties.reportingYear))],
+        total: {
+          totals: result.map((r) => ({
+            reportingYear: r.get("e").properties.reportingYear,
+            total: r.get("e").properties.totalCityWideEmissionsCO2,
+          })),
+        },
+        description: result.map((r) => ({
+          reportingYear: r.get("e").properties.reportingYear,
+          change: r.get("e").properties.emissionStatusType_id,
+          description: r.get("e").properties.description,
+        })),
+        comment: result.map((r) => ({
+          reportingYear: r.get("e").properties.reportingYear,
+          comment: r.get("e").properties.comment || "No comment",
+        })),
+      },
     };
   } catch (error) {
     console.error("Error:", error);
