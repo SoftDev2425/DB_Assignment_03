@@ -16,7 +16,7 @@ interface Params {
   sortBy: "ASC" | "DESC";
   isC40: string;
 }
-//test
+
 export async function emissionRoutes(fastify: FastifyInstance) {
   // 1
   fastify.get("/total/:cityName", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
