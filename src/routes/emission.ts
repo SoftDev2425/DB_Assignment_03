@@ -52,16 +52,16 @@ export async function emissionRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // // 4
-  // fastify.get("/targets/:cityName", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
-  //   try {
-  //     const city = request.params.cityName;
-  //     return await getCityEmissionTargets(city);
-  //   } catch (error: any) {
-  //     fastify.log.error(error);
-  //     reply.code(500).send({ error: error.message });
-  //   }
-  // });
+  // 4
+  fastify.get("/targets/:cityName", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
+    try {
+      const city = request.params.cityName;
+      return await getCityEmissionTargets(city);
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.code(500).send({ error: error.message });
+    }
+  });
 
   // // 5
   // fastify.get("/ranked/:sortBy?", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
