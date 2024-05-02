@@ -1,11 +1,6 @@
 import fs from "fs";
 import { parse } from "csv-parse";
 import * as path from "path";
-import Organisations from "../../models/organisations";
-import Countries from "../../models/countries";
-import Cities from "../../models/cities";
-import Sectors from "../../models/sectors";
-import Targets from "../../models/targets";
 import { cypher } from "../../utils/dbConnection";
 
 const scraper1 = async () => {

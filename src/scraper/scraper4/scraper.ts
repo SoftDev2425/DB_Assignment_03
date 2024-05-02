@@ -2,12 +2,6 @@ import fs from "fs";
 import { parse } from "csv-parse";
 import { format } from "date-fns";
 import * as path from "path";
-import Countries from "../../models/countries";
-import Cities from "../../models/cities";
-import Populations from "../../models/populations";
-import Organisations from "../../models/organisations";
-import EmissionStatusTypes from "../../models/emissionStatusTypes";
-import GHG_Emissions from "../../models/GHG_Emissions";
 import { cypher } from "../../utils/dbConnection";
 
 const scraper4 = async () => {
