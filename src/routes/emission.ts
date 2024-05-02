@@ -31,16 +31,16 @@ export async function emissionRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // // 2
-  // fastify.get("/status/:statusType", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
-  //   try {
-  //     const statusType = request.params.statusType;
-  //     return await getCitiesByStatusType(statusType);
-  //   } catch (error: any) {
-  //     fastify.log.error(error);
-  //     reply.code(500).send({ error: error.message });
-  //   }
-  // });
+  // 2
+  fastify.get("/status/:statusType", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
+    try {
+      const statusType = request.params.statusType;
+      return await getCitiesByStatusType(statusType);
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.code(500).send({ error: error.message });
+    }
+  });
 
   // // 3
   // fastify.get("/avg", async function (request: FastifyRequest, reply: FastifyReply) {
