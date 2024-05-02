@@ -70,7 +70,6 @@ const scraper1 = async () => {
             MERGE (city)-[:LOCATED_IN]->(country)
             MERGE (organisation:Organisation {name: $organisationName, accountNo: $accountNo})
             MERGE (organisation)-[:OPERATES_IN]->(city)
-            MERGE (sector:Sector {name: $sector})
             MERGE (target:Target {targetYear: $targetYear, reportingYear: $reportingYear, baselineYear: $baselineYear, baselineEmissionsCO2: $baselineEmissionsCO2, reductionTargetPercentage: $reductionTargetPercentage, comment: $comment, sector: $sector})
             MERGE (organisation)-[:HAS_TARGET]->(target)
           `,
