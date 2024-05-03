@@ -1,7 +1,7 @@
 {
   "name": "db_assignment3",
   "version": "1.0.0",
-  "description": "",
+  "description": "Using Neo4j",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
@@ -31,5 +31,13 @@
     "@types/node": "^20.11.24",
     "@types/pino": "^7.0.5",
     "typescript": "^5.3.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SoftDev2425/DB_Assignment_03.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SoftDev2425/DB_Assignment_03/issues"
+  },
+  "homepage": "https://github.com/SoftDev2425/DB_Assignment_03#readme"
 }
