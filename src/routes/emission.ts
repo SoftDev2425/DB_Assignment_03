@@ -83,17 +83,17 @@ export async function emissionRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // // 6
-  // fastify.get("/cities", async function (request: FastifyRequest, reply: FastifyReply) {
-  //   try {
-  //     const data = await getCitiesEmissions();
+  // 6
+  fastify.get("/cities", async function (request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const data = await getCitiesEmissions();
 
-  //     return data;
-  //   } catch (error: any) {
-  //     fastify.log.error(error);
-  //     reply.code(500).send({ error: error.message });
-  //   }
-  // });
+      return data;
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.code(500).send({ error: error.message });
+    }
+  });
 
   // // 7
   // fastify.get("/cities/c40/:isC40?", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
