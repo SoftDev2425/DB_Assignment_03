@@ -19,23 +19,17 @@ interface Params {
 
 export async function emissionRoutes(fastify: FastifyInstance) {
   // 1
-  fastify.get(
-    "/total/:cityName",
-    async function (
-      request: FastifyRequest<{ Params: Params }>,
-      reply: FastifyReply
-    ) {
-      try {
-        const city = request.params.cityName as string;
-        return await getTotalEmissionsByCity(city.trim());
-      } catch (error) {
-        fastify.log.error(error);
-        reply.code(500).send({
-          error: "Failed getting total emissions. Please try again later.",
-        });
-      }
+  fastify.get("/total/:cityName", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
+    try {
+      const city = request.params.cityName as string;
+      return await getTotalEmissionsByCity(city.trim());
+    } catch (error) {
+      fastify.log.error(error);
+      reply.code(500).send({
+        error: "Failed getting total emissions. Please try again later.",
+      });
     }
-  );
+  });
 
   // 2
   fastify.get("/status/:statusType", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
@@ -101,32 +95,26 @@ export async function emissionRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // // 7
-  fastify.get(
-    "/cities/c40/:isC40?",
-    async function (
-      request: FastifyRequest<{ Params: Params }>,
-      reply: FastifyReply
-    ) {
-      try {
-        const isC40 = request.params.isC40;
-        return await getC40CitiesWithEmissions(isC40);
-      } catch (error: any) {
-        fastify.log.error(error);
-        reply.code(500).send({ error: error.message });
-      }
+  // 7
+  fastify.get("/cities/c40/:isC40?", async function (request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
+    try {
+      const isC40 = request.params.isC40;
+      return await getC40CitiesWithEmissions(isC40);
+    } catch (error: any) {
+      fastify.log.error(error);
+      reply.code(500).send({ error: error.message });
     }
-  );
+  });
 
-  // // 8
-  // fastify.get("/regions", async function (request, reply: FastifyReply) {
-  //   try {
-  //     return await getTotalEmissionsForRegions();
-  //   } catch (error) {
-  //     fastify.log.error(error);
-  //     reply.code(500).send({ error: "Failed getting regions' emissions. Please try again later." });
-  //   }
-  // });
+  // 8
+  fastify.get("/regions", async function (request, reply: FastifyReply) {
+    try {
+      return await getTotalEmissionsForRegions();
+    } catch (error) {
+      fastify.log.error(error);
+      reply.code(500).send({ error: "Failed getting regions' emissions. Please try again later." });
+    }
+  });
 
   // 9
   fastify.get("/countries", async function (request, reply: FastifyReply) {

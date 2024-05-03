@@ -83,6 +83,8 @@ const scraper2 = async () => {
             await cypher(
               `
               MERGE (country:Country {name: $countryName})
+              ON MATCH SET country.regionName = $regionName
+              ON CREATE SET country.regionName = $regionName
               MERGE (city:City {name: $cityName, C40Status: $cityC40})
               ON MATCH SET city.${populationPropertyName} = $population
               ON CREATE SET city.${populationPropertyName} = $population
@@ -94,6 +96,7 @@ const scraper2 = async () => {
               `,
               {
                 countryName: record.country.name,
+                regionName: record.country.regionName,
                 cityName: record.city.name,
                 cityC40: record.city.C40Status,
                 population: record.city.population.count || "",

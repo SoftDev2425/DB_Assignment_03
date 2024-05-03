@@ -1,55 +1,19 @@
-import GHG_Emissions from "../models/GHG_Emissions";
-
-async function getNewestReportingYear() {
-  const newestYear = await GHG_Emissions.findOne().sort("-reportingYear");
-  return newestYear?.reportingYear;
-}
+import { cypher } from "../utils/dbConnection";
 
 // 8
 export const getTotalEmissionsForRegions = async () => {
   try {
-    const newestReportingYear = await getNewestReportingYear();
+    const result = await cypher(
+      `
+      MATCH (co:Country) <- [:LOCATED_IN] - (c:City) <- [:OPERATES_IN] - (o:Organisation) - [:HAS_EMISSION] -> (e:GHG_Emissions)
+      RETURN co.regionName, SUM(toFloat(e.totalCityWideEmissionsCO2)) AS totalEmissions;
+      `
+    );
 
-    const regions = await GHG_Emissions.aggregate([
-      {
-        $match: { reportingYear: newestReportingYear },
-      },
-      {
-        $lookup: {
-          from: "organisations",
-          localField: "organisation_id",
-          foreignField: "_id",
-          as: "organisation",
-        },
-      },
-      {
-        $lookup: {
-          from: "countries",
-          localField: "organisation.country_id",
-          foreignField: "_id",
-          as: "country",
-        },
-      },
-      {
-        $group: {
-          _id: "$country.regionName",
-          name: { $first: "$country.regionName" },
-          totalEmissions: { $sum: "$totalCityWideEmissionsCO2" },
-        },
-      },
-      {
-        $unwind: "$name",
-      },
-      {
-        $project: {
-          _id: 0,
-          name: 1,
-          totalEmissions: 1,
-        },
-      },
-    ]);
-
-    return regions;
+    return result.map((record) => ({
+      region: record.get("co.regionName"),
+      totalEmissions: record.get("totalEmissions"),
+    }));
   } catch (error) {
     console.error("Error:", error);
     throw error;
