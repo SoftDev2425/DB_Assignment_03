@@ -116,15 +116,15 @@ export async function emissionRoutes(fastify: FastifyInstance) {
   //   }
   // });
 
-  // // 9
-  // fastify.get("/countries", async function (request, reply: FastifyReply) {
-  //   try {
-  //     return await getTotalEmissionsForCountries();
-  //   } catch (error) {
-  //     fastify.log.error(error);
-  //     reply.code(500).send({ error: "Failed getting all countries' total emissions. Please try again later." });
-  //   }
-  // });
+  // 9
+  fastify.get("/countries", async function (request, reply: FastifyReply) {
+    try {
+      return await getTotalEmissionsForCountries();
+    } catch (error) {
+      fastify.log.error(error);
+      reply.code(500).send({ error: "Failed getting all countries' total emissions. Please try again later." });
+    }
+  });
 
   // // 10
   // fastify.get("/countries/gas", async function (request, reply: FastifyReply) {
