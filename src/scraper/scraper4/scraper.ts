@@ -6,7 +6,10 @@ import { cypher } from "../../utils/dbConnection";
 
 const scraper4 = async () => {
   return new Promise((resolve, reject) => {
-    const csvFilePath = path.resolve(__dirname, "2017_Cities_Community_Wide_Emissions.csv");
+    const csvFilePath = path.resolve(
+      __dirname,
+      "2017_Cities_Community_Wide_Emissions.csv"
+    );
 
     const records: any[] = [];
 
@@ -47,7 +50,9 @@ const scraper4 = async () => {
           reportingYear: isNaN(parseInt(data[7])) ? null : parseInt(data[7]),
           measurementYear: data[8]
             .split(" - ")
-            .map((date: string | number | Date) => format(new Date(date), "yyyy-MM-dd"))[1]
+            .map((date: string | number | Date) =>
+              format(new Date(date), "yyyy-MM-dd")
+            )[1]
             .split("-")[0],
           boundary: data[9].trim() || "",
           methodology: data[10].trim() || "",
@@ -55,7 +60,9 @@ const scraper4 = async () => {
           description: data[19].trim() || "",
           comment: data[17].trim() || "",
           gassesIncluded: data[12].trim() || "",
-          totalCityWideEmissionsCO2: isNaN(parseInt(data[13])) ? null : parseInt(data[13]),
+          totalCityWideEmissionsCO2: isNaN(parseInt(data[13]))
+            ? null
+            : parseInt(data[13]),
           totalScope1CO2: isNaN(parseInt(data[15])) ? null : parseInt(data[15]),
           totalScope2CO2: isNaN(parseInt(data[16])) ? null : parseInt(data[16]),
         };
@@ -69,7 +76,12 @@ const scraper4 = async () => {
         records.push(obj);
       })
       .on("end", async () => {
-        console.log("Read all records in csv", csvFilePath, "// Rows:", records.length);
+        console.log(
+          "Read all records in csv",
+          csvFilePath,
+          "// Rows:",
+          records.length
+        );
         console.log("Inserting records into database...");
 
         try {
@@ -116,7 +128,8 @@ const scraper4 = async () => {
                 description: record.GHG_emissions.description,
                 comment: record.GHG_emissions.comment,
                 gassesIncluded: record.GHG_emissions.gassesIncluded,
-                totalCityWideEmissionsCO2: record.GHG_emissions.totalCityWideEmissionsCO2 || "",
+                totalCityWideEmissionsCO2:
+                  record.GHG_emissions.totalCityWideEmissionsCO2 || "",
                 totalScope1CO2: record.GHG_emissions.totalScope1CO2 || "",
                 totalScope2CO2: record.GHG_emissions.totalScope2CO2 || "",
                 emissionStatusType: record.emissionStatusTypes.type,

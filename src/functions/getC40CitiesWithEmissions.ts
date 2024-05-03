@@ -1,67 +1,44 @@
-import Cities from "../models/cities";
-import GHG_Emissions from "../models/GHG_Emissions";
-import Organisations from "../models/organisations";
+import { cypher } from "../utils/dbConnection";
 
-// 7
 export const getC40CitiesWithEmissions = async (C40Status: string) => {
+  // Convert C40Status from a string to a boolean indicating whether it is "C40"
+  const status = C40Status === "true";
+
   try {
-    const c40Cities = await Cities.find({
-      C40Status: C40Status == "C40" ? true : false,
-    }).select("_id");
+    const query = `
+    MATCH (c:City)<-[:OPERATES_IN]-(o:Organisation)-[:HAS_EMISSION]->(e:GHG_Emissions)
+      WHERE c.C40Status = $status
+      WITH c, o, max(e.reportingYear) AS maxYear
+      MATCH (c)<-[:OPERATES_IN]-(o)-[:HAS_EMISSION]->(e)
+      WHERE e.reportingYear = maxYear
+      RETURN c AS city, o AS organisation, e AS emissions
+    `;
+    const params = { status };
+    const result = await cypher(query, params);
 
-    const cityIds = c40Cities.map((city) => city._id);
-
-    const organizationsInC40Cities = await Organisations.find({
-      city_id: { $in: cityIds },
-    }).select("_id");
-
-    const organizationIds = organizationsInC40Cities.map((org) => org._id); // Extract organization IDs
-
-    const emissions = await GHG_Emissions.find({
-      organisation_id: { $in: organizationIds }, // Filter emissions by these organizations
-    })
-      .populate({
-        path: "organisation_id",
-        model: "Organisations",
-        populate: {
-          path: "city_id",
-          model: "Cities",
-        },
-      })
-      .populate({
-        path: "emissionStatusType_id",
-        model: "EmissionStatusTypes",
-      });
-
-    return emissions.map((emission: any) => {
-      return {
-        city: {
-          id: emission.organisation_id.city_id._id,
-          name: emission.organisation_id.city_id.name,
-        },
-        organisation: {
-          id: emission.organisation_id._id,
-          accountNo: emission.organisation_id.accountNo,
-          name: emission.organisation_id.name,
-        },
-        emissions: {
-          id: emission._id,
-          reportingYear: emission.reportingYear ? emission.reportingYear : "N/A",
-          mesurementYear: emission.mesurementYear ? emission.mesurementYear : "N/A",
-          totalCityWideEmissionsCO2: emission.totalCityWideEmissionsCO2 ? emission.totalCityWideEmissionsCO2 : "N/A",
-          totalScope1_CO2: emission.totalScope1_CO2 ? emission.totalScope1_CO2 : "N/A",
-          totalScope2_CO2: emission.totalScope2_CO2 ? emission.totalScope2_CO2 : "N/A",
-          gassesIncluded: emission.gassesIncluded ? emission.gassesIncluded : "N/A",
-          boundary: emission.boundary ? emission.boundary : "N/A",
-          methodology: emission.methodology ? emission.methodology : "N/A",
-          methodologyDetails: emission.methodologyDetails ? emission.methodologyDetails : "N/A",
-          description: emission.description ? emission.description : "N/A",
-          comment: emission.comment ? emission.comment : "N/A",
-          status: emission.emissionStatusType_id.type,
-        },
-      };
-    });
-  } catch (error: any) {
-    throw new Error(error.message);
+    // Assuming `result` is an array of Record objects directly
+    return result.map((record) => ({
+      city: {
+        id: record.get("city").identity.toString(),
+        name: record.get("city").properties.name,
+        c40status: record.get("city").properties.C40Status,
+      },
+      organisation: {
+        id: record.get("organisation").identity.toString(),
+        name: record.get("organisation").properties.name,
+        accountNo: record.get("organisation").properties.accountNo, // Assuming accountNo exists
+      },
+      emissions: {
+        id: record.get("emissions").identity.toString(),
+        reportingYear:
+          record.get("emissions").properties.reportingYear || "N/A",
+        totalCityWideEmissionsCO2:
+          record.get("emissions").properties.totalCityWideEmissionsCO2 || "N/A",
+        // Additional emissions properties can be added here
+      },
+    }));
+  } catch (error) {
+    console.error("Failed to fetch emissions data:", error);
+    throw new Error("Error fetching emissions data");
   }
 };

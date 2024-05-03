@@ -6,7 +6,10 @@ import { cypher } from "../../utils/dbConnection";
 const scraper1 = async () => {
   console.log("Scraper 1 started...");
   return new Promise((resolve, reject) => {
-    const csvFilePath = path.resolve(__dirname, "2016_Cities_Emissions_Reduction_Targets_20240207.csv");
+    const csvFilePath = path.resolve(
+      __dirname,
+      "2016_Cities_Emissions_Reduction_Targets_20240207.csv"
+    );
 
     const records: any[] = [];
 
@@ -37,8 +40,12 @@ const scraper1 = async () => {
         const target = {
           reportingYear: isNaN(parseInt(data[5])) ? null : parseInt(data[5]),
           baselineYear: isNaN(parseInt(data[8])) ? null : parseInt(data[8]),
-          baselineEmissionsCO2: isNaN(parseInt(data[9])) ? null : parseInt(data[9]),
-          reductionTargetPercentage: isNaN(parseInt(data[10])) ? null : parseInt(data[10]),
+          baselineEmissionsCO2: isNaN(parseInt(data[9]))
+            ? null
+            : parseInt(data[9]),
+          reductionTargetPercentage: isNaN(parseInt(data[10]))
+            ? null
+            : parseInt(data[10]),
           targetYear: isNaN(parseInt(data[11])) ? null : parseInt(data[11]),
           comment: data[12].trim(),
           sector: data[6].trim(),
@@ -52,7 +59,12 @@ const scraper1 = async () => {
         records.push(obj);
       })
       .on("end", async () => {
-        console.log("Read all records in csv", csvFilePath, "// Rows:", records.length);
+        console.log(
+          "Read all records in csv",
+          csvFilePath,
+          "// Rows:",
+          records.length
+        );
         console.log("Inserting records into database...");
 
         try {
@@ -78,7 +90,8 @@ const scraper1 = async () => {
                 reportingYear: record.target.reportingYear,
                 baselineYear: record.target.baselineYear || "",
                 baselineEmissionsCO2: record.target.baselineEmissionsCO2 || "",
-                reductionTargetPercentage: record.target.reductionTargetPercentage,
+                reductionTargetPercentage:
+                  record.target.reductionTargetPercentage,
                 comment: record.target.comment,
                 sector: record.target.sector,
                 targetName: record.target.reportingYear,
