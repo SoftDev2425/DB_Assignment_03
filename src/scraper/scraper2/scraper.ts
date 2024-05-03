@@ -1,18 +1,14 @@
 import fs from "fs";
 import { parse } from "csv-parse";
 import * as path from "path";
-import Countries from "../../models/countries";
-import Cities from "../../models/cities";
-import Populations from "../../models/populations";
-import Organisations from "../../models/organisations";
-import Sectors from "../../models/sectors";
-import TargetTypes from "../../models/targetTypes";
-import Targets from "../../models/targets";
 import { cypher } from "../../utils/dbConnection";
 
 const scraper2 = async () => {
   return new Promise((resolve, reject) => {
-    const csvFilePath = path.resolve(__dirname, "2017_Cities_Emissions_Reduction_Targets_20240207.csv");
+    const csvFilePath = path.resolve(
+      __dirname,
+      "2017_Cities_Emissions_Reduction_Targets_20240207.csv"
+    );
 
     const records: any[] = [];
 
@@ -52,8 +48,12 @@ const scraper2 = async () => {
         const target = {
           reportingYear: isNaN(parseInt(data[7])) ? null : parseInt(data[7]),
           baselineYear: isNaN(parseInt(data[9])) ? null : parseInt(data[9]),
-          baselineEmissionsCO2: isNaN(parseInt(data[10])) ? null : parseInt(data[10]),
-          reductionTargetPercentage: isNaN(parseInt(data[12])) ? null : parseInt(data[12]),
+          baselineEmissionsCO2: isNaN(parseInt(data[10]))
+            ? null
+            : parseInt(data[10]),
+          reductionTargetPercentage: isNaN(parseInt(data[12]))
+            ? null
+            : parseInt(data[12]),
           targetYear: isNaN(parseInt(data[13])) ? null : parseInt(data[13]),
           comment: data[16].trim(),
           sector: data[9].trim(),
@@ -68,7 +68,12 @@ const scraper2 = async () => {
         records.push(obj);
       })
       .on("end", async () => {
-        console.log("Read all records in csv", csvFilePath, "// Rows:", records.length);
+        console.log(
+          "Read all records in csv",
+          csvFilePath,
+          "// Rows:",
+          records.length
+        );
         console.log("Inserting records into database...");
 
         try {
@@ -99,7 +104,8 @@ const scraper2 = async () => {
                 reportingYear: record.target.reportingYear,
                 baselineYear: record.target.baselineYear || "",
                 baselineEmissionsCO2: record.target.baselineEmissionsCO2 || "",
-                reductionTargetPercentage: record.target.reductionTargetPercentage || "",
+                reductionTargetPercentage:
+                  record.target.reductionTargetPercentage || "",
                 comment: record.target.comment,
                 targetName: record.target.reportingYear,
                 targetType: record.targetType.type,

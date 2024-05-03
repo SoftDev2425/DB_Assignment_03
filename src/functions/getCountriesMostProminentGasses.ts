@@ -46,7 +46,13 @@ export const getCountriesMostProminentGasses = async () => {
             $reduce: {
               input: "$gasses",
               initialValue: "",
-              in: { $concat: ["$$value", { $cond: [{ $eq: ["$$value", ""] }, "", " "] }, "$$this"] },
+              in: {
+                $concat: [
+                  "$$value",
+                  { $cond: [{ $eq: ["$$value", ""] }, "", " "] },
+                  "$$this",
+                ],
+              },
             },
           },
         },

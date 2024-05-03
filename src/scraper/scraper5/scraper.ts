@@ -5,7 +5,10 @@ import { cypher } from "../../utils/dbConnection";
 
 const scraper5 = async () => {
   return new Promise((resolve, reject) => {
-    const csvFilePath = path.resolve(__dirname, "2023_Cities_Climate_Risk_and_Vulnerability_Assessments_20240207.csv");
+    const csvFilePath = path.resolve(
+      __dirname,
+      "2023_Cities_Climate_Risk_and_Vulnerability_Assessments_20240207.csv"
+    );
 
     const records: any[] = [];
 
@@ -37,7 +40,12 @@ const scraper5 = async () => {
         records.push(obj);
       })
       .on("end", async () => {
-        console.log("Read all records in csv", csvFilePath, "// Rows:", records.length);
+        console.log(
+          "Read all records in csv",
+          csvFilePath,
+          "// Rows:",
+          records.length
+        );
         console.log("Inserting records into database...");
 
         try {
